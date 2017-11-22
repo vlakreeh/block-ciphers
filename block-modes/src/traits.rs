@@ -1,4 +1,4 @@
-use block_cipher_trait::{BlockCipher, NewFixKey, NewVarKey, InvalidKeyLength};
+use block_cipher_trait::{BlockCipher, InvalidKeyLength};
 use block_cipher_trait::generic_array::GenericArray;
 use block_cipher_trait::generic_array::typenum::Unsigned;
 
@@ -19,35 +19,22 @@ pub trait Padding {
 }
 
 pub trait BlockMode<C: BlockCipher> {
-    fn encrypt_nopad(&mut self, buffer: &mut [u8]);
-    fn decrypt_nopad(&mut self, buffer: &mut [u8]);
+    fn new_with_cipher(cipher: C, iv: &Array<C::BlockSize>) -> Self;
+    fn encrypt_block(&mut self, buffer: &mut Array<C::BlockSize>);
+    fn decrypt_block(&mut self, buffer: &mut Array<C::BlockSize>);
 }
-
-pub trait BlockModeIv<C: BlockCipher>: BlockMode<C> {
-    fn new(cipher: C, iv: &Array<C::BlockSize>) -> Self;
-}
-
-pub trait BlockModeFixKey<C>: BlockModeIv<C> + Sized where C: NewFixKey {
-    fn new(key: &Array<C::KeySize>, iv: &Array<C::BlockSize>) -> Self {
-        <Self as BlockModeIv<C>>::new(C::new(key), iv)
-    }
-}
-
-impl<T, C> BlockModeFixKey<C> for T
-    where C: NewFixKey, T: BlockModeIv<C> + Sized { }
-
-pub trait BlockModeVarKey<C>: BlockModeIv<C> + Sized where C: NewVarKey {
-    fn new(key: &[u8], iv: &Array<C::BlockSize>)
-        -> Result<Self, InvalidKeyLength>
-    {
-        Ok(<Self as BlockModeIv<C>>::new(C::new(key)?, iv))
-    }
-}
-
-impl<T, C> BlockModeVarKey<C> for T
-    where C: NewVarKey, T: BlockModeIv<C> + Sized { }
 
 pub trait PadBlockMode<C: BlockCipher, P: Padding>: BlockMode<C> + Sized {
+    fn new(key: &Array<C::KeySize>, iv: &Array<C::BlockSize>) -> Self {
+        Self::new_with_cipher(C::new(key), iv)
+    }
+
+    fn new_varkey(key: &[u8], iv: &Array<C::BlockSize>)
+        -> Result<Self, InvalidKeyLength>
+    {
+        Ok(Self::new_with_cipher(C::new_varkey(key)?, iv))
+    }
+
     fn encrypt(mut self, buffer: &mut [u8], pos: usize) -> &[u8] {
         let bs = C::BlockSize::to_usize();
 
@@ -69,7 +56,8 @@ pub trait PadBlockMode<C: BlockCipher, P: Padding>: BlockMode<C> + Sized {
     fn decrypt(mut self, buffer: &mut [u8]) -> Result<&[u8], UnpadError> {
         let bs = C::BlockSize::to_usize();
         assert_eq!(buffer.len() % bs, 0);
-        self.decrypt_nopad(buffer);
+        for block in
+        self.decrypt_block(buffer);
         P::unpad(buffer)
     }
 }

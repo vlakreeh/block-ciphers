@@ -8,7 +8,7 @@ mod tools;
 
 mod ecb;
 pub use ecb::Ecb;
-mod cbc;
+/*mod cbc;
 pub use cbc::Cbc;
 mod pcbc;
 pub use pcbc::Pcbc;
@@ -18,5 +18,5 @@ mod ofb;
 pub use ofb::Ofb;
 mod ctr;
 pub use ctr::{Ctr128, Ctr64};
-
+*/
 pub mod paddings;
