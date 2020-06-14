@@ -68,7 +68,7 @@ where
 
     /// Encrypt message and store result in vector.
     #[cfg(feature = "alloc")]
-    fn encrypt_vec(mut self, plaintext: &[u8]) -> Vec<u8> {
+    fn encrypt_vec(&mut self, plaintext: &[u8]) -> Vec<u8> {
         let bs = C::BlockSize::to_usize();
         let pos = plaintext.len();
         let n = pos + bs;
@@ -88,7 +88,7 @@ where
 
     /// Encrypt message and store result in vector.
     #[cfg(feature = "alloc")]
-    fn decrypt_vec(mut self, ciphertext: &[u8]) -> Result<Vec<u8>, BlockModeError> {
+    fn decrypt_vec(&mut self, ciphertext: &[u8]) -> Result<Vec<u8>, BlockModeError> {
         let bs = C::BlockSize::to_usize();
         if ciphertext.len() % bs != 0 {
             Err(BlockModeError)?
